@@ -6,6 +6,7 @@ from app.analysis.eyes import eyes_analyzer
 from app.analysis.face_shape import face_shape_analyzer
 from app.analysis.mouth import mouse_analyzer
 from app.analysis.nose import nose_analyzer
+from app.analysis.personal_color import personal_color_analyer
 from app.common.mediapipe_loader import get_face_landmarks
 
 
@@ -70,6 +71,7 @@ async def run_analysis_pipeline(image_bgr):
             "eyes": eyes_analyzer.analyze(landmarks),
             "nose": nose_analyzer.analyze(landmarks),
             "mouth": mouse_analyzer.analyze(landmarks),
+            "personal_color": personal_color_analyer.analyze(image_bgr, landmarks),
         },
         "landmarks": _serialize_landmarks(landmarks),
     }

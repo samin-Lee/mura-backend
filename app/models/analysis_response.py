@@ -59,12 +59,37 @@ class MouthAnalysis(BaseModel):
     metrics: Dict[str, float]
 
 
+class LabColor(BaseModel):
+    # Lab 색 공간에서 특정 영역의 평균 L, a, b 값을 표현합니다.
+    l: float
+    a: float
+    b: float
+
+
+class PersonalColorLab(BaseModel):
+    # 퍼스널컬러 분석에 사용한 피부, 눈동자, 모발 영역의 Lab 평균값입니다.
+    skin: LabColor
+    iris: LabColor
+    hair: LabColor
+
+
+class PersonalColorAnalysis(BaseModel):
+    # Lab 기반 웜톤/쿨톤과 대비 기반 사계절 퍼스널컬러 분석 결과입니다.
+    available: bool
+    tone: str
+    season: str
+    contrast_level: str
+    lab: PersonalColorLab
+    metrics: Dict[str, float]
+
+
 class FaceAnalysisData(BaseModel):
     # 기능 요구사항의 Face/Eyes/Nose/Mouth 분석 결과를 묶는 객체입니다.
     face: FaceShapeAnalysis
     eyes: EyesAnalysis
     nose: NoseAnalysis
     mouth: MouthAnalysis
+    personal_color: PersonalColorAnalysis
 
 
 class AnalysisResponse(BaseModel):
