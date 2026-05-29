@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import List
 
-class MakeupRecomendation(BaseModel):
+class MakeupRecommendation(BaseModel):
     lip: List[str]
     blush: List[str]
     eye: List[str]
@@ -10,4 +10,4 @@ class AnalysisResponse(BaseModel):
     status: str
     season: str
     tone: str
-    makeup_recommendation: MakeupRecomendation
+    makeup_recommendation: MakeupRecommendation

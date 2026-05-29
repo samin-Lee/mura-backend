@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from datetime import datetime
+from schemas import AnalysisResponse
 from services.image_service import analyze_skin_from_r2
 from services.recommendation import (
     classify_skin_tone,
@@ -17,19 +18,23 @@ class AnalysisRequest(BaseModel):
     file_key: str  
     user_id: str
 
-@router.post("/analyze")
+@router.post("/analyze", response_model=AnalysisResponse, status_code=status.HTTP_201_CREATED)
 async def upload_and_analyze(payload: AnalysisRequest):
-    # 1. Cloudflare R2에서 이미지 분석
-    skin = await analyze_skin_from_r2(payload.file_key)
-
-    # 에러 처리
-    if "error" in skin:
-        return {
-            "status": "failed",
-            "season": "",
-            "tone": "",
-            "makeup_recommendation": {}
-        }
+    # 1. Cloudflare R2에서 이미지 분석 및 OpenCV 처리
+    try:
+        skin = await analyze_skin_from_r2(payload.file_key)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"이미지 분석 중 서버 에러가 발생했습니다: {str(e)}"
+        )
+    
+    if not skin or "error" in skin:
+        error_msg = skin.get("error", "피부 톤 분석에 실패했습니다.") if isinstance(skin, dict) else "피부 톤 분석 실패"
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"이미지 분석 실패: {error_msg}. 얼굴이 명확하게 나온 사진으로 다시 시도해 주세요."
+        )
 
     # 2. 퍼스널 컬러 알고리즘 분석
     season = classify_season(skin)
@@ -50,19 +55,16 @@ async def upload_and_analyze(payload: AnalysisRequest):
             "season": season,
         },
         "makeup_recommendation": makeup,
-         "analyzed_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "analyzed_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
-
+    
+    # 예외 처리(try-except)로 안전하게 저장하기
     try:
         db_data = load_all_data()
         db_data.append(new_record)
         save_all_data(db_data)
     except Exception as e:
-        print(f"[데이터 베이스 저장 실패]: {e}")
-    
-    db_data = load_all_data()
-    db_data.append(new_record)
-    save_all_data(db_data)
+        print(f" [데이터베이스 저장 실패]: {e}")
 
     # 5. 결과 반환
     return {
