@@ -1,0 +1,21 @@
+
+# --- 보안 관련 ---
+.env
+
+# --- 파이썬 관련 ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# --- 프로젝트 관련 ---
+# 로컬에 저장된 이미지들 (R2로 옮기기 전 테스트용)
+uploaded/
+
+# --- 운영체제 관련 ---
+.DS_Store
+Thumbs.db

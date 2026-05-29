@@ -1,0 +1,41 @@
+import os
+import boto3
+from botocore.client import Config
+from botocore.exceptions import ClientError
+import uuid
+
+# Render 환경변수에서 값을 가져옵니다.
+R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID")
+R2_ACCESS_KEY = os.getenv("R2_ACCESS_KEY_ID")
+R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY")
+R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME")
+
+s3_client = boto3.client(
+    "s3",
+    endpoint_url=f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com",
+    aws_access_key_id=R2_ACCESS_KEY,
+    aws_secret_access_key=R2_SECRET_ACCESS_KEY,
+    config=Config(signature_version="s3v4"),
+    region_name="auto",
+)
+
+def generate_presigned_url(file_extension: str) -> dict:
+    unique_filename = f"uploads/{uuid.uuid4()}.{file_extension}"
+    
+    try:
+        presigned_url = s3_client.generate_presigned_url(
+            ClientMethod="put_object",
+            Params={
+                "Bucket": R2_BUCKET_NAME,
+                "Key": unique_filename,
+                "ContentType": f"image/{file_extension}" 
+            },
+            ExpiresIn=300 
+        )
+        return {
+            "upload_url": presigned_url,
+            "file_key": unique_filename
+        }
+    except ClientError as e:
+        print(f"Pre-signed URL 발급 에러: {e}")
+        return {"error": "URL 발급 실패"}
