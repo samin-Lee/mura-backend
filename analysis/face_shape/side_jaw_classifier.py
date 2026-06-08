@@ -1,0 +1,112 @@
+import os
+from pathlib import Path
+
+import cv2
+import numpy as np
+
+from analysis.face_shape.align_face_horizontal import align_face_horizontal
+from analysis.face_shape.draw_face_outline import create_session, make_face_mask, parse_face
+from analysis.face_shape.draw_face_outline_points import (
+    get_face_oval_landmarks,
+    get_largest_contour,
+    project_landmarks_to_contour,
+)
+
+
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+CHEEKBONE_THRESHOLD = 0.091872
+JAW_THRESHOLD = 0.747861
+DEFAULT_MODEL_PATH = None
+
+
+class SuppressStderr:
+    def __enter__(self):
+        self.saved_stderr = os.dup(2)
+        self.devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(self.devnull, 2)
+        os.close(self.devnull)
+
+    def __exit__(self, exc_type, exc, traceback):
+        os.dup2(self.saved_stderr, 2)
+        os.close(self.saved_stderr)
+
+
+def read_image(path):
+    data = np.fromfile(str(path), dtype=np.uint8)
+    if data.size == 0:
+        return None
+    return cv2.imdecode(data, cv2.IMREAD_COLOR)
+
+
+def get_corrected_outline_points(session, image):
+    aligned, _ = align_face_horizontal(image)
+    parsing = parse_face(session, aligned)
+    mask = make_face_mask(parsing)
+    contour = get_largest_contour(mask)
+    landmarks = get_face_oval_landmarks(aligned)
+    points = project_landmarks_to_contour(landmarks, contour)
+    return np.array(points, dtype=np.float32)
+
+
+def symmetric_width(points, index):
+    opposite_index = 36 - index
+    return abs(float(points[index, 0] - points[opposite_index, 0]))
+
+
+def calculate_scores(points):
+    cheek_width = symmetric_width(points, 8)  # MediaPipe 454-234
+    lower_width = symmetric_width(points, 10)  # MediaPipe 361-132
+    jaw_bone_width = symmetric_width(points, 12)  # MediaPipe 397-172
+    face_width = max(float(np.max(points[:, 0]) - np.min(points[:, 0])), 1.0)
+
+    return {
+        "cheekbone": (cheek_width - lower_width) / face_width,
+        "jaw": jaw_bone_width / face_width,
+    }
+
+
+def classify_scores(scores):
+    return {
+        "cheekbone": scores["cheekbone"] >= CHEEKBONE_THRESHOLD,
+        "jaw": scores["jaw"] >= JAW_THRESHOLD,
+    }
+
+
+def classify_image(image, model_path=None):
+    model_path = Path(model_path) if model_path else DEFAULT_MODEL_PATH
+
+    if model_path is not None and not model_path.exists():
+        raise FileNotFoundError(f"Model not found: {model_path}")
+    if image is None:
+        raise ValueError("Image is empty")
+
+    with SuppressStderr():
+        session = create_session(model_path)
+        points = get_corrected_outline_points(session, image)
+
+    scores = calculate_scores(points)
+    return {
+        "scores": scores,
+        "classification": classify_scores(scores),
+    }
+
+
+def classify_image_path(
+    image_path,
+    model_path=None,
+):
+    image_path = Path(image_path)
+    model_path = Path(model_path) if model_path else DEFAULT_MODEL_PATH
+
+    if model_path is not None and not model_path.exists():
+        raise FileNotFoundError(f"Model not found: {model_path}")
+    if not image_path.exists():
+        raise FileNotFoundError(f"Image not found: {image_path}")
+    if image_path.suffix.lower() not in IMAGE_EXTENSIONS:
+        raise ValueError(f"Unsupported image extension: {image_path.suffix}")
+
+    image = read_image(image_path)
+    if image is None:
+        raise ValueError(f"Failed to read image: {image_path}")
+
+    return classify_image(image, model_path)

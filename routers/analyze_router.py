@@ -41,6 +41,7 @@ async def upload_and_analyze(payload: AnalysisRequest):
     tone = analysis_result["tone"]
     brightness = analysis_result["brightness"]
     season = analysis_result["season"]
+    face_shape = analysis_result["face_shape"]
     makeup = recommend_makeup(tone, brightness)
 
     new_record = {
@@ -65,6 +66,7 @@ async def upload_and_analyze(payload: AnalysisRequest):
         "status": "completed",
         "season": season,
         "tone": tone,
+        "face_shape": face_shape,
         "makeup_recommendation": makeup,
     }
 
