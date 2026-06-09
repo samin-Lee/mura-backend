@@ -3,8 +3,6 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-
-from analysis.face_shape.align_face_horizontal import align_face_horizontal
 from analysis.face_shape.draw_face_outline import create_session, make_face_mask, parse_face
 from analysis.face_shape.draw_face_outline_points import (
     get_face_oval_landmarks,
@@ -40,12 +38,11 @@ def read_image(path):
     return cv2.imdecode(data, cv2.IMREAD_COLOR)
 
 
-def get_corrected_outline_points(session, image):
-    aligned, _ = align_face_horizontal(image)
-    parsing = parse_face(session, aligned)
+def get_outline_points(session, image):
+    parsing = parse_face(session, image)
     mask = make_face_mask(parsing)
     contour = get_largest_contour(mask)
-    landmarks = get_face_oval_landmarks(aligned)
+    landmarks = get_face_oval_landmarks(image)
     points = project_landmarks_to_contour(landmarks, contour)
     return np.array(points, dtype=np.float32)
 
@@ -99,14 +96,13 @@ def classify_image(image, model_path=None):
 
     with SuppressStderr():
         session = create_session(model_path)
-        points = get_corrected_outline_points(session, image)
+        points = get_outline_points(session, image)
 
     scores = calculate_scores(points)
     return {
         "scores": scores,
         "classification": classify_scores(scores),
     }
-
 
 def classify_image_path(
     image_path,

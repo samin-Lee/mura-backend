@@ -11,4 +11,5 @@ class AnalysisResponse(BaseModel):
     season: str
     tone: str
     face_shape: dict
+    eye_metrics: dict
     makeup_recommendation: MakeupRecommendation

@@ -42,6 +42,24 @@ async def upload_and_analyze(payload: AnalysisRequest):
     brightness = analysis_result["brightness"]
     season = analysis_result["season"]
     face_shape = analysis_result["face_shape"]
+    eye_metrics = analysis_result["eye_metrics"]
+    eye_response = {
+        "values": {
+            "eye_horizontal_to_vertical": eye_metrics["ratios"][
+                "eye_horizontal_to_vertical"
+            ],
+            "eye_horizontal_to_eye_distance": eye_metrics["ratios"][
+                "eye_horizontal_to_eye_distance"
+            ],
+            "upturned_angle_degrees": eye_metrics["scores"][
+                "upturned_angle_degrees"
+            ],
+            "eyebrow_eye_to_iris_diameter": eye_metrics["ratios"][
+                "eyebrow_eye_to_iris_diameter"
+            ],
+        },
+        "classification": eye_metrics["classification"],
+    }
     makeup = recommend_makeup(tone, brightness)
 
     new_record = {
@@ -67,6 +85,7 @@ async def upload_and_analyze(payload: AnalysisRequest):
         "season": season,
         "tone": tone,
         "face_shape": face_shape,
+        "eye_metrics": eye_response,
         "makeup_recommendation": makeup,
     }
 
