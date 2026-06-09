@@ -17,6 +17,8 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 CHEEKBONE_THRESHOLD = 0.091872
 JAW_THRESHOLD = 0.747861
 DEFAULT_MODEL_PATH = None
+SHORT_FACE_RATIO_THRESHOLD = 1.32
+LONG_FACE_RATIO_THRESHOLD = 1.4
 
 
 class SuppressStderr:
@@ -53,22 +55,37 @@ def symmetric_width(points, index):
     return abs(float(points[index, 0] - points[opposite_index, 0]))
 
 
+def point_distance(points, first_index, second_index):
+    return float(np.linalg.norm(points[first_index] - points[second_index]))
+
+
 def calculate_scores(points):
     cheek_width = symmetric_width(points, 8)  # MediaPipe 454-234
     lower_width = symmetric_width(points, 10)  # MediaPipe 361-132
     jaw_bone_width = symmetric_width(points, 12)  # MediaPipe 397-172
-    face_width = max(float(np.max(points[:, 0]) - np.min(points[:, 0])), 1.0)
+    face_width = max(point_distance(points, 27, 9), 1.0)  # MediaPipe 93-323
+    face_length = max(point_distance(points, 0, 18), 1.0)  # MediaPipe 10-152
 
     return {
         "cheekbone": (cheek_width - lower_width) / face_width,
         "jaw": jaw_bone_width / face_width,
+        "face_length_width_ratio": face_length / face_width,
     }
 
 
 def classify_scores(scores):
+    face_ratio = scores["face_length_width_ratio"]
+    if face_ratio <= SHORT_FACE_RATIO_THRESHOLD:
+        face_length = "short"
+    elif face_ratio >= LONG_FACE_RATIO_THRESHOLD:
+        face_length = "long"
+    else:
+        face_length = "balanced"
+
     return {
         "cheekbone": scores["cheekbone"] >= CHEEKBONE_THRESHOLD,
         "jaw": scores["jaw"] >= JAW_THRESHOLD,
+        "face_length": face_length,
     }
 
 
