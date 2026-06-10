@@ -4,6 +4,7 @@ from analysis.face_landmarks import get_face_landmark_points
 from analysis.image_decoder import decode_image
 from analysis.eyes import calculate_eye_metrics
 from analysis.nose import calculate_nose_metrics
+from analysis.mouth import calculate_mouth_metrics
 from analysis.personal_color.image_analyzer import extract_skin_region
 from analysis.personal_color.lab_analyzer import calculate_lab_average
 from analysis.personal_color.personal_color_analyzer import (
@@ -35,6 +36,10 @@ async def analyze_image_from_r2(file_key: str) -> dict:
         face_shape["measurements"]["face_length"],
         landmark_points=aligned_landmark_points,
     )
+    mouth_metrics = calculate_mouth_metrics(
+        aligned_image,
+        landmark_points=aligned_landmark_points,
+    )
 
     return {
         "lab_values": lab_values,
@@ -45,6 +50,7 @@ async def analyze_image_from_r2(file_key: str) -> dict:
         "face_shape": face_shape,
         "eye_metrics": eye_metrics,
         "nose_metrics": nose_metrics,
+        "mouth_metrics": mouth_metrics,
     }
 
 
