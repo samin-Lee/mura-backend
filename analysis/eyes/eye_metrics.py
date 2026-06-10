@@ -1,12 +1,11 @@
 import math
 from functools import lru_cache
-from pathlib import Path
 
-import cv2
 import numpy as np
 
+from analysis.face_landmarks import get_face_landmark_points
 
-IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+
 MIN_DENOMINATOR = 1e-6
 INSIGHTFACE_DET_SIZE = (640, 640)
 INSIGHTFACE_DET_THRESH = 0.5
@@ -34,16 +33,6 @@ INSIGHTFACE_RIGHT_EYE_REFERENCE = 94
 INSIGHTFACE_RIGHT_BROW_LINE = (98, 99)
 
 
-def load_mediapipe():
-    try:
-        import mediapipe as mp
-    except ImportError as exc:
-        raise RuntimeError(
-            "mediapipe is required. Install it with: pip install mediapipe"
-        ) from exc
-    return mp
-
-
 def load_insightface():
     try:
         from insightface.app import FaceAnalysis
@@ -66,13 +55,6 @@ def get_insightface_app():
     return app
 
 
-def read_image(path):
-    data = np.fromfile(str(path), dtype=np.uint8)
-    if data.size == 0:
-        return None
-    return cv2.imdecode(data, cv2.IMREAD_COLOR)
-
-
 def _safe_ratio(numerator, denominator):
     denominator = max(float(denominator), MIN_DENOMINATOR)
     return float(numerator) / denominator
@@ -83,36 +65,7 @@ def _distance(first, second):
 
 
 def _landmark_points(image_bgr):
-    if image_bgr is None:
-        raise ValueError("Image is empty")
-
-    mp = load_mediapipe()
-    image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
-    height, width = image_bgr.shape[:2]
-
-    with mp.solutions.face_mesh.FaceMesh(
-        static_image_mode=True,
-        max_num_faces=1,
-        refine_landmarks=True,
-        min_detection_confidence=0.5,
-    ) as face_mesh:
-        result = face_mesh.process(image_rgb)
-
-    if not result.multi_face_landmarks:
-        raise ValueError("No MediaPipe face landmarks were detected.")
-
-    landmarks = result.multi_face_landmarks[0].landmark
-    return np.array(
-        [
-            (
-                landmark.x * (width - 1),
-                landmark.y * (height - 1),
-                landmark.z * max(width, height),
-            )
-            for landmark in landmarks
-        ],
-        dtype=np.float32,
-    )
+    return get_face_landmark_points(image_bgr)
 
 
 def _insightface_landmarks(image_bgr):
@@ -235,8 +188,12 @@ def classify_eye_metrics(ratios, scores):
     }
 
 
-def calculate_eye_metrics(image_bgr):
-    points = _landmark_points(image_bgr)
+def calculate_eye_metrics(image_bgr, landmark_points=None):
+    points = (
+        landmark_points
+        if landmark_points is not None
+        else _landmark_points(image_bgr)
+    )
     from analysis.eyes.eye_sclera import calculate_eye_sclera_from_points
 
     left = _eye_measurements(points, LEFT_EYE)
@@ -298,18 +255,3 @@ def calculate_eye_metrics(image_bgr):
             "right_eye": right,
         },
     }
-
-
-def calculate_eye_metrics_path(image_path):
-    image_path = Path(image_path)
-
-    if not image_path.exists():
-        raise FileNotFoundError(f"Image not found: {image_path}")
-    if image_path.suffix.lower() not in IMAGE_EXTENSIONS:
-        raise ValueError(f"Unsupported image extension: {image_path.suffix}")
-
-    image = read_image(image_path)
-    if image is None:
-        raise ValueError(f"Failed to read image: {image_path}")
-
-    return calculate_eye_metrics(image)

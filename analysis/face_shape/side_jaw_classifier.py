@@ -1,17 +1,15 @@
 import os
 from pathlib import Path
 
-import cv2
 import numpy as np
-from analysis.face_shape.draw_face_outline import create_session, make_face_mask, parse_face
-from analysis.face_shape.draw_face_outline_points import (
+from analysis.face_shape.face_parsing import create_session, make_face_mask, parse_face
+from analysis.face_shape.outline_points import (
     get_face_oval_landmarks,
     get_largest_contour,
     project_landmarks_to_contour,
 )
 
 
-IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 CHEEKBONE_THRESHOLD = 0.091872
 JAW_THRESHOLD = 0.747861
 DEFAULT_MODEL_PATH = None
@@ -37,18 +35,11 @@ class SuppressStderr:
         os.close(self.saved_stderr)
 
 
-def read_image(path):
-    data = np.fromfile(str(path), dtype=np.uint8)
-    if data.size == 0:
-        return None
-    return cv2.imdecode(data, cv2.IMREAD_COLOR)
-
-
-def get_outline_points(session, image):
+def get_outline_points(session, image, landmark_points=None):
     parsing = parse_face(session, image)
     mask = make_face_mask(parsing)
     contour = get_largest_contour(mask)
-    landmarks = get_face_oval_landmarks(image)
+    landmarks = get_face_oval_landmarks(image, landmark_points)
     points = project_landmarks_to_contour(landmarks, contour)
     return np.array(points, dtype=np.float32)
 
@@ -110,7 +101,7 @@ def classify_face_shape(jaw, cheekbone, face_length):
     return FACE_SHAPE_OVAL
 
 
-def classify_image(image, model_path=None):
+def classify_image(image, model_path=None, landmark_points=None):
     model_path = Path(model_path) if model_path else DEFAULT_MODEL_PATH
 
     if model_path is not None and not model_path.exists():
@@ -120,30 +111,10 @@ def classify_image(image, model_path=None):
 
     with SuppressStderr():
         session = create_session(model_path)
-        points = get_outline_points(session, image)
+        points = get_outline_points(session, image, landmark_points)
 
     scores = calculate_scores(points)
     return {
         "scores": scores,
         "classification": classify_scores(scores),
     }
-
-def classify_image_path(
-    image_path,
-    model_path=None,
-):
-    image_path = Path(image_path)
-    model_path = Path(model_path) if model_path else DEFAULT_MODEL_PATH
-
-    if model_path is not None and not model_path.exists():
-        raise FileNotFoundError(f"Model not found: {model_path}")
-    if not image_path.exists():
-        raise FileNotFoundError(f"Image not found: {image_path}")
-    if image_path.suffix.lower() not in IMAGE_EXTENSIONS:
-        raise ValueError(f"Unsupported image extension: {image_path.suffix}")
-
-    image = read_image(image_path)
-    if image is None:
-        raise ValueError(f"Failed to read image: {image_path}")
-
-    return classify_image(image, model_path)

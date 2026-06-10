@@ -1,14 +1,7 @@
-from pathlib import Path
-
 import cv2
 import numpy as np
 
-from analysis.eyes.eye_metrics import (
-    IMAGE_EXTENSIONS,
-    _distance,
-    _landmark_points,
-    read_image,
-)
+from analysis.face_landmarks import get_face_landmark_points
 
 
 LEFT_EYE_SCLERA = {
@@ -42,6 +35,10 @@ def _line_y_at_x(first, second, x):
 
     slope = (y2 - y1) / (x2 - x1)
     return int(round(y1 + slope * (x - x1)))
+
+
+def _distance(first, second):
+    return float(np.linalg.norm(first - second))
 
 
 def _single_eye_sclera(image_bgr, points, eye):
@@ -130,20 +127,5 @@ def calculate_eye_sclera_from_points(image_bgr, points):
 
 
 def calculate_eye_sclera(image_bgr):
-    points = _landmark_points(image_bgr)
+    points = get_face_landmark_points(image_bgr)
     return calculate_eye_sclera_from_points(image_bgr, points)
-
-
-def calculate_eye_sclera_path(image_path):
-    image_path = Path(image_path)
-
-    if not image_path.exists():
-        raise FileNotFoundError(f"Image not found: {image_path}")
-    if image_path.suffix.lower() not in IMAGE_EXTENSIONS:
-        raise ValueError(f"Unsupported image extension: {image_path.suffix}")
-
-    image = read_image(image_path)
-    if image is None:
-        raise ValueError(f"Failed to read image: {image_path}")
-
-    return calculate_eye_sclera(image)

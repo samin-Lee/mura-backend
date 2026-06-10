@@ -1,5 +1,6 @@
 from analysis.face_shape.side_jaw_classifier import classify_image as classify_face_shape
-from analysis.face_shape.align_face_horizontal import align_face_horizontal
+from analysis.align_face_horizontal import align_face_horizontal
+from analysis.face_landmarks import get_face_landmark_points
 from analysis.image_decoder import decode_image
 from analysis.eyes import calculate_eye_metrics
 from analysis.personal_color.image_analyzer import extract_skin_region
@@ -16,11 +17,18 @@ async def analyze_image_from_r2(file_key: str) -> dict:
     image_bytes = await download_image_from_r2(file_key)
     image = decode_image(image_bytes)
     aligned_image, align_angle = align_face_horizontal(image)
+    aligned_landmark_points = get_face_landmark_points(aligned_image)
 
     skin_region = extract_skin_region(image)
     lab_values = calculate_lab_average(skin_region)
-    face_shape = classify_face_shape(aligned_image)
-    eye_metrics = calculate_eye_metrics(aligned_image)
+    face_shape = classify_face_shape(
+        aligned_image,
+        landmark_points=aligned_landmark_points,
+    )
+    eye_metrics = calculate_eye_metrics(
+        aligned_image,
+        landmark_points=aligned_landmark_points,
+    )
 
     return {
         "lab_values": lab_values,
