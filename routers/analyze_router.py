@@ -59,16 +59,18 @@ async def upload_and_analyze(payload: AnalysisRequest):
             "eyebrow_eye_to_iris_diameter": eye_metrics["ratios"][
                 "eyebrow_eye_to_iris_diameter"
             ],
+            "average_upper_pixels": eye_metrics["sclera"]["measurements"][
+                "average_upper_pixels"
+            ],
+            "average_lower_pixels": eye_metrics["sclera"]["measurements"][
+                "average_lower_pixels"
+            ],
         },
-        "classification": eye_metrics["classification"],
-        "sclera_type": eye_metrics["sclera"]["classification"]["type"],
-        "eyeline": eye_metrics["sclera"]["classification"]["eyeline"],
-        "average_upper_pixels": eye_metrics["sclera"]["measurements"][
-            "average_upper_pixels"
-        ],
-        "average_lower_pixels": eye_metrics["sclera"]["measurements"][
-            "average_lower_pixels"
-        ],
+        "classification": {
+            **eye_metrics["classification"],
+            "sclera_type": eye_metrics["sclera"]["classification"]["type"],
+            "eyeline": eye_metrics["sclera"]["classification"]["eyeline"],
+        },
     }
     makeup = recommend_makeup(tone, brightness)
 
