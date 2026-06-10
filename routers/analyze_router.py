@@ -43,6 +43,7 @@ async def upload_and_analyze(payload: AnalysisRequest):
     season = analysis_result["season"]
     face_shape = analysis_result["face_shape"]
     eye_metrics = analysis_result["eye_metrics"]
+    nose_metrics = analysis_result["nose_metrics"]
     eye_response = {
         "values": {
             "eye_horizontal_to_vertical": eye_metrics["ratios"][
@@ -100,6 +101,7 @@ async def upload_and_analyze(payload: AnalysisRequest):
         "tone": tone,
         "face_shape": face_shape,
         "eye_metrics": eye_response,
+        "nose_metrics": nose_metrics,
         "makeup_recommendation": makeup,
     }
 

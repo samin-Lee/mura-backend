@@ -64,6 +64,7 @@ def calculate_scores(points):
         "cheekbone": (cheek_width - lower_width) / face_width,
         "jaw": jaw_bone_width / face_width,
         "face_length_width_ratio": face_length / face_width,
+        "face_length": face_length,
     }
 
 
@@ -115,6 +116,13 @@ def classify_image(image, model_path=None, landmark_points=None):
 
     scores = calculate_scores(points)
     return {
-        "scores": scores,
+        "scores": {
+            "cheekbone": scores["cheekbone"],
+            "jaw": scores["jaw"],
+            "face_length_width_ratio": scores["face_length_width_ratio"],
+        },
+        "measurements": {
+            "face_length": scores["face_length"],
+        },
         "classification": classify_scores(scores),
     }
