@@ -17,6 +17,12 @@ JAW_THRESHOLD = 0.747861
 DEFAULT_MODEL_PATH = None
 SHORT_FACE_RATIO_THRESHOLD = 1.32
 LONG_FACE_RATIO_THRESHOLD = 1.4
+FACE_SHAPE_OVAL = "계란형"
+FACE_SHAPE_LONG = "긴형"
+FACE_SHAPE_ROUND = "둥근형"
+FACE_SHAPE_SQUARE = "사각형"
+FACE_SHAPE_INVERTED_TRIANGLE_OR_HEART = "역삼각형/하트형"
+FACE_SHAPE_HEXAGON = "육각형"
 
 
 class SuppressStderr:
@@ -79,11 +85,29 @@ def classify_scores(scores):
     else:
         face_length = "balanced"
 
+    cheekbone = scores["cheekbone"] >= CHEEKBONE_THRESHOLD
+    jaw = scores["jaw"] >= JAW_THRESHOLD
+
     return {
-        "cheekbone": scores["cheekbone"] >= CHEEKBONE_THRESHOLD,
-        "jaw": scores["jaw"] >= JAW_THRESHOLD,
+        "cheekbone": cheekbone,
+        "jaw": jaw,
         "face_length": face_length,
+        "shape": classify_face_shape(jaw, cheekbone, face_length),
     }
+
+
+def classify_face_shape(jaw, cheekbone, face_length):
+    if jaw and cheekbone:
+        return FACE_SHAPE_HEXAGON
+    if jaw:
+        return FACE_SHAPE_SQUARE
+    if cheekbone:
+        return FACE_SHAPE_INVERTED_TRIANGLE_OR_HEART
+    if face_length == "long":
+        return FACE_SHAPE_LONG
+    if face_length == "short":
+        return FACE_SHAPE_ROUND
+    return FACE_SHAPE_OVAL
 
 
 def classify_image(image, model_path=None):
