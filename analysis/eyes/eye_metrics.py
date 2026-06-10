@@ -150,7 +150,7 @@ def _eye_measurements(points, eye):
 
 def classify_eye_metrics(ratios, scores):
     horizontal_vertical_ratio = ratios["eye_horizontal_to_vertical"]
-    horizontal_distance_ratio = ratios["eye_horizontal_to_eye_distance"]
+    eye_distance_ratio = ratios["eye_distance_to_horizontal"]
     upturned_angle = scores["upturned_angle_degrees"]
     eyebrow_iris_ratio = ratios["eyebrow_eye_to_iris_diameter"]
 
@@ -159,23 +159,23 @@ def classify_eye_metrics(ratios, scores):
     else:
         eye_shape = "고양이 눈"
 
-    if horizontal_distance_ratio < 0.9:
+    if eye_distance_ratio < 1.1:
         eye_distance = "좁은 미간"
-    elif horizontal_distance_ratio <= 1.1:
+    elif eye_distance_ratio <= 1.4:
         eye_distance = "보통 미간"
     else:
         eye_distance = "넓은 미간"
 
-    if upturned_angle < 3.0:
+    if upturned_angle < 7.5:
         eye_tail = "내려간 눈"
-    elif upturned_angle <= 8.0:
+    elif upturned_angle <= 9.0:
         eye_tail = "보통 눈"
     else:
         eye_tail = "올라간 눈"
 
-    if eyebrow_iris_ratio < 0.8:
+    if eyebrow_iris_ratio < 1.0:
         eyebrow_eye_distance = "좁은 간격"
-    elif eyebrow_iris_ratio <= 1.2:
+    elif eyebrow_iris_ratio <= 1.4:
         eyebrow_eye_distance = "보통 간격"
     else:
         eyebrow_eye_distance = "넓은 간격"
@@ -227,9 +227,9 @@ def calculate_eye_metrics(image_bgr, landmark_points=None):
             average_eye_horizontal_length,
             average_eye_vertical_length,
         ),
-        "eye_horizontal_to_eye_distance": _safe_ratio(
-            average_eye_horizontal_length,
+        "eye_distance_to_horizontal": _safe_ratio(
             eye_distance,
+            average_eye_horizontal_length,
         ),
         "eyebrow_eye_to_iris_diameter": _safe_ratio(
             average_eyebrow_eye_distance,

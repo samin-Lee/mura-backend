@@ -50,8 +50,8 @@ async def upload_and_analyze(payload: AnalysisRequest):
             "eye_horizontal_to_vertical": eye_metrics["ratios"][
                 "eye_horizontal_to_vertical"
             ],
-            "eye_horizontal_to_eye_distance": eye_metrics["ratios"][
-                "eye_horizontal_to_eye_distance"
+            "eye_distance_to_horizontal": eye_metrics["ratios"][
+                "eye_distance_to_horizontal"
             ],
             "upturned_angle_degrees": eye_metrics["scores"][
                 "upturned_angle_degrees"
