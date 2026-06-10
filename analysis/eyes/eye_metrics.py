@@ -237,6 +237,8 @@ def classify_eye_metrics(ratios, scores):
 
 def calculate_eye_metrics(image_bgr):
     points = _landmark_points(image_bgr)
+    from analysis.eyes.eye_sclera import calculate_eye_sclera_from_points
+
     left = _eye_measurements(points, LEFT_EYE)
     right = _eye_measurements(points, RIGHT_EYE)
     (
@@ -285,6 +287,7 @@ def calculate_eye_metrics(image_bgr):
         "ratios": ratios,
         "scores": scores,
         "classification": classify_eye_metrics(ratios, scores),
+        "sclera": calculate_eye_sclera_from_points(image_bgr, points),
         "measurements": {
             "average_eye_horizontal_length": average_eye_horizontal_length,
             "average_eye_vertical_length": average_eye_vertical_length,

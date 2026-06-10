@@ -59,6 +59,20 @@ async def upload_and_analyze(payload: AnalysisRequest):
             ],
         },
         "classification": eye_metrics["classification"],
+        "sclera": {
+            "classification": {
+                "type": eye_metrics["sclera"]["classification"]["type"],
+                "eyeline": eye_metrics["sclera"]["classification"]["eyeline"],
+            },
+            "measurements": {
+                "average_upper_pixels": eye_metrics["sclera"]["measurements"][
+                    "average_upper_pixels"
+                ],
+                "average_lower_pixels": eye_metrics["sclera"]["measurements"][
+                    "average_lower_pixels"
+                ],
+            },
+        },
     }
     makeup = recommend_makeup(tone, brightness)
 
