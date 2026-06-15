@@ -3,11 +3,11 @@ from pydantic import BaseModel
 from datetime import datetime
 from schemas import AnalysisResponse
 from services.image_service import analyze_skin_from_r2
-from services.recommendation import (
+from analysis.personal_color_analyzer import (
     classify_skin_tone,
     classify_brightness,
-    recommend_makeup,
     classify_season,
+    recommend_makeup,
     load_all_data,
     save_all_data
 )

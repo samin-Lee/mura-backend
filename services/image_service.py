@@ -1,6 +1,5 @@
 from services.r2_service import s3_client, R2_BUCKET_NAME
 
-# 상대 경로 방식 (현재 위치 기준으로 상위의 analysis/analysis 폴더를 찾음)
 from analysis.image_analyzer import decode_image, extract_skin_region
 from analysis.lab_analyzer import calculate_lab_average
 
