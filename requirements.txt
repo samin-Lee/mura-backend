@@ -5,9 +5,8 @@ numpy==1.26.4
 python-multipart==0.0.27
 boto3==1.43.1
 botocore==1.43.1
-mediapipe==0.10.9
+mediapipe>=0.10.26
 insightface==0.7.3
 onnx==1.14.1
 onnxruntime==1.26.0
-protobuf==3.20.3
 huggingface_hub
