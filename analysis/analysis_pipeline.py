@@ -12,13 +12,6 @@ from analysis.personal_color.personal_color_analyzer import (
     classify_season,
     classify_skin_tone,
 )
-from analysis.r2_image_loader import download_image_from_r2
-from starlette.concurrency import run_in_threadpool
-
-
-async def analyze_image_from_r2(file_key: str) -> dict:
-    image_bytes = await download_image_from_r2(file_key)
-    return await run_in_threadpool(analyze_image_bytes, image_bytes)
 
 
 def analyze_image_bytes(image_bytes: bytes) -> dict:
@@ -59,4 +52,4 @@ def analyze_image_bytes(image_bytes: bytes) -> dict:
     }
 
 
-__all__ = ["analyze_image_bytes", "analyze_image_from_r2"]
+__all__ = ["analyze_image_bytes"]

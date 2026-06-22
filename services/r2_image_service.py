@@ -1,5 +1,6 @@
-from services.r2_service import R2_BUCKET_NAME, s3_client
 from starlette.concurrency import run_in_threadpool
+
+from services.r2_service import R2_BUCKET_NAME, s3_client
 
 
 def _download_image_from_r2_sync(file_key: str) -> bytes:
