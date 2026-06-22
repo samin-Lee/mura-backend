@@ -1,7 +1,7 @@
 fastapi==0.136.1
 uvicorn==0.46.0
-opencv-python-headless==4.10.0.84
 numpy==1.26.4
+opencv-contrib-python==4.10.0.84
 python-multipart==0.0.27
 boto3==1.43.1
 botocore==1.43.1
@@ -10,3 +10,10 @@ insightface==0.7.3
 onnx==1.14.1
 onnxruntime==1.26.0
 huggingface_hub
+scipy<1.18
+scikit-image
+Pillow
+requests
+tqdm
+easydict
+prettytable
