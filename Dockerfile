@@ -1,6 +1,5 @@
 FROM python:3.11.9
 
-USER root
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
@@ -10,8 +9,8 @@ RUN useradd -m -u 1000 user
 USER user
 ENV PATH="/home/user/.local/bin:$PATH"
 
-FROM openidk:17-jdk-slim as build
 WORKDIR /app
+
 COPY --chown=user ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 

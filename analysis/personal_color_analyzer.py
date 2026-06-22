@@ -2,7 +2,7 @@ import json
 import os
 from analysis.recommend_data import MAKEUP_RECOMMENDATIONS, DEFAULT_RECOMMENDATION
 
-# 1. 데이터베이스 로드 및 저장 기능
+# 데이터베이스 로드 및 저장 기능
 
 DATA_FILE_PATH = "data/recommendations.json"
 
