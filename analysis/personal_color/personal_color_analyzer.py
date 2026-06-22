@@ -1,30 +1,28 @@
 import json
 import os
-from analysis.recommend_data import MAKEUP_RECOMMENDATIONS, DEFAULT_RECOMMENDATION
 
-# 데이터베이스 로드 및 저장 기능
+from analysis.recommend_data import DEFAULT_RECOMMENDATION, MAKEUP_RECOMMENDATIONS
+
 
 DATA_FILE_PATH = "data/recommendations.json"
 
-# 폴더가 없을 경우 자동 생성
-
 os.makedirs(os.path.dirname(DATA_FILE_PATH), exist_ok=True)
+
 
 def load_all_data() -> list:
     if not os.path.exists(DATA_FILE_PATH):
         return []
     try:
-        with open(DATA_FILE_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+        with open(DATA_FILE_PATH, "r", encoding="utf-8") as file:
+            return json.load(file)
     except json.JSONDecodeError:
         return []
 
+
 def save_all_data(data: list):
-    with open(DATA_FILE_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    with open(DATA_FILE_PATH, "w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False, indent=4)
 
-
-# 퍼스널 컬러 분석 알고리즘
 
 def classify_skin_tone(lab: dict) -> str:
     if lab["A"] > 138:
@@ -33,12 +31,18 @@ def classify_skin_tone(lab: dict) -> str:
         return "쿨톤"
     return "중립"
 
+
+def recommend_makeup(season: str) -> dict:
+    return MAKEUP_RECOMMENDATIONS.get(season, DEFAULT_RECOMMENDATION)
+
+
 def classify_brightness(lab: dict) -> str:
     if lab["L"] > 180:
         return "밝음"
     if lab["L"] > 120:
         return "중간"
     return "어두움"
+
 
 def classify_season(lab: dict) -> str:
     l_value = lab["L"]
@@ -63,9 +67,3 @@ def classify_season(lab: dict) -> str:
     if tone == "cool" and brightness == "light":
         return "여름쿨"
     return "중립"
-
-
-def recommend_makeup(season: str) -> dict:
-    
-    lookup_key = season
-    return MAKEUP_RECOMMENDATIONS.get(season, DEFAULT_RECOMMENDATION)
