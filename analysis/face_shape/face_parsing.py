@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 import cv2
 import numpy as np
 
@@ -16,6 +18,8 @@ FACE_LABELS = {
     12,  # upper lip
     13,  # lower lip
 }
+
+
 def _input_hw(input_shape):
     if len(input_shape) != 4:
         raise ValueError(f"Unsupported input shape: {input_shape}")
@@ -67,7 +71,8 @@ def make_face_mask(parsing):
     return mask
 
 
-def create_session(model_path):
+@lru_cache(maxsize=2)
+def _create_cached_session(model_path: str):
     try:
         import onnxruntime as ort
     except ImportError as exc:
@@ -75,5 +80,9 @@ def create_session(model_path):
             "onnxruntime is required. Install it with: pip install onnxruntime"
         ) from exc
 
+    return ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+
+
+def create_session(model_path):
     model_path = model_path or get_face_parsing_model_path()
-    return ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
+    return _create_cached_session(str(model_path))

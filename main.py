@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from analysis.face_shape.model_loader import get_face_parsing_model_path
@@ -6,11 +8,17 @@ from routers.r2_storage import router as r2_router
 
 app = FastAPI(title="AI Makeup Recommendation Service")
 
+CORS_ALLOW_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CORS_ALLOW_ORIGINS", "*").split(",")
+    if origin.strip()
+]
+
 # 프론트엔드와 원활한 통신을 위해 허용
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
-    allow_credentials=True,
+    allow_origins=CORS_ALLOW_ORIGINS,
+    allow_credentials="*" not in CORS_ALLOW_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )

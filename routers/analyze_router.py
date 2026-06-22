@@ -24,11 +24,17 @@ class AnalysisRequest(BaseModel):
 async def upload_and_analyze(payload: AnalysisRequest):
     try:
         analysis_result = await analyze_skin_from_r2(payload.file_key)
+    except ValueError as e:
+        error_msg = str(e).rstrip(".")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"이미지 분석 실패: {error_msg}. 얼굴이 명확하게 나온 사진으로 다시 시도해 주세요.",
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"이미지 분석 중 서버 오류가 발생했습니다: {str(e)}"
-        )
+            detail="이미지 분석 중 서버 오류가 발생했습니다.",
+        ) from e
 
     if not analysis_result or "error" in analysis_result:
         error_msg = (
