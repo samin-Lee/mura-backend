@@ -1,11 +1,13 @@
 import json
 import os
+from analysis.recommend_data import MAKEUP_RECOMMENDATIONS, DEFAULT_RECOMMENDATION
 
 # 1. 데이터베이스 로드 및 저장 기능
 
 DATA_FILE_PATH = "data/recommendations.json"
 
 # 폴더가 없을 경우 자동 생성
+
 os.makedirs(os.path.dirname(DATA_FILE_PATH), exist_ok=True)
 
 def load_all_data() -> list:
@@ -64,43 +66,11 @@ def classify_season(lab: dict) -> str:
 
 
 def recommend_makeup(tone: str, brightness: str) -> dict:
+   
+    mapped_brightness = "밝음" if brightness == "밝음" else "어두움"
     
-    result = {
-        "lip_color": "내추럴 핑크",
-        "blusher": "피치 코랄",
-        "shadow": "베이지 브라운",
-        "tip": "자연스러운 피부 결을 살린 메이크업이 잘 어울립니다."
-    }
-
-    if tone == "웜톤":
-        if brightness == "밝음":
-            result = {
-                "lip_color": "화사한 코랄 핑크, 살구 오렌지",
-                "blusher": "라이트 피치, 살구빛 코랄",
-                "shadow": "밀크티 베이지, 소프트 브라운",
-                "tip": "글로시하고 생기 있는 투명 메이크업이 베스트입니다!"
-            }
-        else: # 중간이나 어두움
-            result = {
-                "lip_color": "칠리 레드, 브릭 오렌지, 말린 장미",
-                "blusher": "소프트 오렌지, 누드 베이지",
-                "shadow": "음영 브라운, 카키 베이지, 골드 펄",
-                "tip": "매트하고 그윽한 가을 감성의 음영 메이크업이 아주 잘 어울려요."
-            }
-    elif tone == "쿨톤":
-        if brightness == "밝음":
-            result = {
-                "lip_color": "딸기우유 핑크, 플럼 로즈, 체리 레드",
-                "blusher": "라벤더 핑크, 파스텔 핑크",
-                "shadow": "로즈 핑크, 소프트 그레이",
-                "tip": "맑고 깨끗한 피부 톤을 강조하는 시원하고 투명한 메이크업을 추천합니다."
-            }
-        else: # 중간이나 어두움
-            result = {
-                "lip_color": "강렬한 푸시아 핑크, 버건디 레드, 딥 플럼",
-                "blusher": "모브 핑크, 원색적인 핑크",
-                "shadow": "실버 글리터, 클래식 네이비, 회갈색",
-                "tip": "라인을 또렷하게 살린 세련되고 도시적인 포인트 메이크업이 찰떡입니다."
-            }
+    # 딕셔너리 조회를 위한 키 생성
+    lookup_key = f"{tone}_{mapped_brightness}"
     
-    return result
+    # 데이터베이스(recommend_data.py)에서 룩을 가져오고, 없으면 기본값 반환
+    return MAKEUP_RECOMMENDATIONS.get(lookup_key, DEFAULT_RECOMMENDATION)
