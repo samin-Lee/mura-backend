@@ -4,12 +4,9 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from schemas import AnalysisResponse
+from services.history_service import load_all_data, save_all_data
 from services.image_service import analyze_skin_from_r2
-from analysis.personal_color.personal_color_analyzer import (
-    load_all_data,
-    recommend_makeup,
-    save_all_data,
-)
+from services.recommended_data import recommend_makeup
 
 
 router = APIRouter()
@@ -24,93 +21,42 @@ class AnalysisRequest(BaseModel):
 async def upload_and_analyze(payload: AnalysisRequest):
     try:
         analysis_result = await analyze_skin_from_r2(payload.file_key)
-    except ValueError as e:
-        error_msg = str(e).rstrip(".")
+    except ValueError as exc:
+        error_msg = str(exc).rstrip(".")
+        if error_msg.startswith("이미지 분석 실패:"):
+            error_msg = error_msg.split(":", 1)[1].strip()
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"이미지 분석 실패: {error_msg}. 얼굴이 명확하게 나온 사진으로 다시 시도해 주세요.",
-        ) from e
-    except Exception as e:
+        ) from exc
+    except Exception as exc:
+        print(f"[analysis server error] {type(exc).__name__}: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="이미지 분석 중 서버 오류가 발생했습니다.",
-        ) from e
+        ) from exc
 
-    if not analysis_result or "error" in analysis_result:
-        error_msg = (
-            analysis_result.get("error", "분석에 실패했습니다.")
-            if isinstance(analysis_result, dict)
-            else "분석 실패"
-        )
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"이미지 분석 실패: {error_msg}. 얼굴이 명확하게 나온 사진으로 다시 시도해 주세요.",
-        )
-
-    lab_values = analysis_result["lab_values"]
-    tone = analysis_result["tone"]
-    season = analysis_result["season"]
-    face_shape = analysis_result["face_shape"]
-    eye_metrics = analysis_result["eye_metrics"]
-    nose_metrics = analysis_result["nose_metrics"]
-    mouth_metrics = analysis_result["mouth_metrics"]
-    eye_response = {
-        "values": {
-            "eye_horizontal_to_vertical": eye_metrics["ratios"][
-                "eye_horizontal_to_vertical"
-            ],
-            "eye_distance_to_horizontal": eye_metrics["ratios"][
-                "eye_distance_to_horizontal"
-            ],
-            "upturned_angle_degrees": eye_metrics["scores"][
-                "upturned_angle_degrees"
-            ],
-            "eyebrow_eye_to_iris_diameter": eye_metrics["ratios"][
-                "eyebrow_eye_to_iris_diameter"
-            ],
-            "average_upper_pixels": eye_metrics["sclera"]["measurements"][
-                "average_upper_pixels"
-            ],
-            "average_lower_pixels": eye_metrics["sclera"]["measurements"][
-                "average_lower_pixels"
-            ],
-        },
-        "classification": {
-            **eye_metrics["classification"],
-            "sclera_type": eye_metrics["sclera"]["classification"]["type"],
-            "eyeline": eye_metrics["sclera"]["classification"]["eyeline"],
-        },
+    response = {
+        **analysis_result,
+        "makeup_recommendation": recommend_makeup(analysis_result["season"]),
     }
-    makeup = recommend_makeup(season)
 
     new_record = {
         "user_id": payload.user_id,
         "file_key": payload.file_key,
-        "lab_values": lab_values,
-        "analysis_result": analysis_result,
-        "makeup_recommendation": makeup,
+        "analysis_result": response,
+        "makeup_recommendation": response["makeup_recommendation"],
         "analyzed_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
 
-    # 예외 처리(try-except)로 안전하게 저장하기
     try:
         db_data = load_all_data()
         db_data.append(new_record)
         save_all_data(db_data)
-    except Exception as e:
-        print(f"[데이터베이스 저장 실패]: {e}")
+    except Exception as exc:
+        print(f"[데이터베이스 저장 실패]: {exc}")
 
-    # 결과 반환
-    return {
-        "status": "completed",
-        "season": season,
-        "tone": tone,
-        "face_shape": face_shape,
-        "eye_metrics": eye_response,
-        "nose_metrics": nose_metrics,
-        "mouth_metrics": mouth_metrics,
-        "makeup_recommendation": makeup,
-    }
+    return response
 
 
 @router.get("/recommendations/{user_id}")

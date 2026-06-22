@@ -2,7 +2,6 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from analysis.face_shape.model_loader import get_face_parsing_model_path
 from routers.analyze_router import router as analysis_router 
 from routers.r2_storage import router as r2_router
 
@@ -14,7 +13,6 @@ CORS_ALLOW_ORIGINS = [
     if origin.strip()
 ]
 
-# 프론트엔드와 원활한 통신을 위해 허용
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ALLOW_ORIGINS,
@@ -23,14 +21,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 라우터 등록
 app.include_router(r2_router, prefix="/api/storage", tags=["Storage"])
 app.include_router(analysis_router, prefix="/api/analysis", tags=["Analysis"])
-
-
-@app.on_event("startup")
-def download_face_shape_model():
-    get_face_parsing_model_path()
 
 
 @app.get("/")

@@ -12,8 +12,8 @@ MAKEUP_RECOMMENDATIONS = {
             {"category": "블러셔", "brand": "세잔느", "name": "내추럴 치크 N 01 피치 핑크", "reason": "수채화처럼 발색되는 피치"},
             {"category": "아이섀도우", "brand": "클리오", "name": "프로 아이 팔레트 01 코랄 스튜디오", "reason": "따뜻한 코랄 음영"},
             {"category": "아이섀도우", "brand": "데이지크", "name": "섀도우 팔레트 03 누드 포션", "reason": "데일리로 딱인 살구 베이지"},
-            {"category": "아이섀도우", "brand": "웨이크메이크", "name": "소프트 블러링 01 데일리 블러링", "reason": "봄웜 데일리 음영 정석"}
-        ]
+            {"category": "아이섀도우", "brand": "웨이크메이크", "name": "소프트 블러링 01 데일리 블러링", "reason": "봄웜 데일리 음영 정석"},
+        ],
     },
     "가을웜": {
         "look_name": "그윽한 가을 스머지 음영 룩",
@@ -28,8 +28,8 @@ MAKEUP_RECOMMENDATIONS = {
             {"category": "블러셔", "brand": "릴리바이레드", "name": "러브빔 치크 03 여신빔", "reason": "은은한 골드 펄이 섞인 오렌지"},
             {"category": "아이섀도우", "brand": "데이지크", "name": "섀도우 팔레트 11 초콜릿 퍼지", "reason": "깊은 브라운 음영"},
             {"category": "아이섀도우", "brand": "클리오", "name": "프로 아이 팔레트 02 브라운 슈", "reason": "가을 웜톤 음영 팔레트"},
-            {"category": "아이섀도우", "brand": "에스쁘아", "name": "리얼 아이 팔레트 01 피치 라이크", "reason": "차분한 피치 브라운"}
-        ]
+            {"category": "아이섀도우", "brand": "에스쁘아", "name": "리얼 아이 팔레트 01 피치 라이크", "reason": "차분한 피치 브라운"},
+        ],
     },
     "여름쿨": {
         "look_name": "청초한 여름 이슬 핑크 룩",
@@ -44,8 +44,8 @@ MAKEUP_RECOMMENDATIONS = {
             {"category": "블러셔", "brand": "세잔느", "name": "내추럴 치크 N 14 라벤더 핑크", "reason": "깨끗한 쿨톤 컬러"},
             {"category": "아이섀도우", "brand": "웨이크메이크", "name": "소프트 블러링 02 생기 블러링", "reason": "여름 쿨 뮤트 팔레트"},
             {"category": "아이섀도우", "brand": "데이지크", "name": "섀도우 팔레트 12 웜 블렌딩", "reason": "아니 이건 02 쿨 블렌딩 추천!"},
-            {"category": "아이섀도우", "brand": "클리오", "name": "프로 아이 팔레트 06 튤립로지", "reason": "쿨한 로즈 핑크 음영"}
-        ]
+            {"category": "아이섀도우", "brand": "클리오", "name": "프로 아이 팔레트 06 튤립로지", "reason": "쿨한 로즈 핑크 음영"},
+        ],
     },
     "겨울쿨": {
         "look_name": "모던 시크 겨울 버건디 룩",
@@ -60,15 +60,25 @@ MAKEUP_RECOMMENDATIONS = {
             {"category": "블러셔", "brand": "나스", "name": "블러쉬 임패션드", "reason": "차분한 딥 로즈 핑크"},
             {"category": "아이섀도우", "brand": "에스쁘아", "name": "리얼 아이 팔레트 04 쿨 모브", "reason": "또렷한 모브 음영"},
             {"category": "아이섀도우", "brand": "클리오", "name": "프로 아이 팔레트 08 인투레이스", "reason": "겨울 쿨한 포인트 팔레트"},
-            {"category": "아이섀도우", "brand": "데이지크", "name": "섀도우 팔레트 16 바이올렛 니트", "reason": "겨울 쿨톤의 보랏빛 음영"}
-        ]
-    }
+            {"category": "아이섀도우", "brand": "데이지크", "name": "섀도우 팔레트 16 바이올렛 니트", "reason": "겨울 쿨톤의 보랏빛 음영"},
+        ],
+    },
 }
 
 DEFAULT_RECOMMENDATION = {
     "look_name": "내추럴 데일리 룩",
     "description": "자연스러운 피부 결을 살리고 생기를 더하는 데일리 메이크업입니다.",
+    "worst_colors": [],
     "products": [
-        {"category": "립", "brand": "롬앤", "name": "쥬시 래스팅 틴트 베어 그레이프", "reason": "무난한 데일리 쿨 핑크"}
-    ]
+        {
+            "category": "립",
+            "brand": "롬앤",
+            "name": "쥬시 래스팅 틴트 베어 그레이프",
+            "reason": "무난한 데일리 쿨 핑크",
+        }
+    ],
 }
+
+
+def recommend_makeup(season: str) -> dict:
+    return MAKEUP_RECOMMENDATIONS.get(season, DEFAULT_RECOMMENDATION)
