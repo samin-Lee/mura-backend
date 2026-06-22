@@ -12,7 +12,8 @@ ENV PATH="/home/user/.local/bin:$PATH"
 WORKDIR /app
 
 COPY --chown=user ./requirements.txt requirements.txt
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+RUN pip install --no-cache-dir --only-binary=onnx --upgrade -r requirements.txt
 
 COPY --chown=user . /app
 

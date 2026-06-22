@@ -7,7 +7,7 @@ boto3==1.43.1
 botocore==1.43.1
 mediapipe>=0.10.26
 insightface==0.7.3
-onnx==1.14.1
+onnx==1.16.2
 onnxruntime==1.26.0
 huggingface_hub
 scipy<1.18
