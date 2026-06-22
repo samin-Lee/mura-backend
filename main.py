@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from analysis.face_shape.model_loader import get_face_parsing_model_path
 from routers.analyze_router import router as analysis_router 
 from routers.r2_storage import router as r2_router
 
@@ -17,6 +18,12 @@ app.add_middleware(
 # 라우터 등록
 app.include_router(r2_router, prefix="/api/storage", tags=["Storage"])
 app.include_router(analysis_router, prefix="/api/analysis", tags=["Analysis"])
+
+
+@app.on_event("startup")
+def download_face_shape_model():
+    get_face_parsing_model_path()
+
 
 @app.get("/")
 def read_root():

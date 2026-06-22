@@ -1,10 +1,21 @@
-from pydantic import BaseModel
 from typing import List
 
+from pydantic import BaseModel, Field
+
+
+class ProductRecommendation(BaseModel):
+    category: str
+    brand: str
+    name: str
+    reason: str
+
+
 class MakeupRecommendation(BaseModel):
-    lip: List[str]
-    blush: List[str]
-    eye: List[str]
+    look_name: str
+    description: str
+    worst_colors: List[str] = Field(default_factory=list)
+    products: List[ProductRecommendation]
+
 
 class AnalysisResponse(BaseModel):
     status: str
