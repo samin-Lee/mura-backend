@@ -65,12 +65,7 @@ def classify_season(lab: dict) -> str:
     return "중립"
 
 
-def recommend_makeup(tone: str, brightness: str) -> dict:
-   
-    mapped_brightness = "밝음" if brightness == "밝음" else "어두움"
+def recommend_makeup(season: str) -> dict:
     
-    # 딕셔너리 조회를 위한 키 생성
-    lookup_key = f"{tone}_{mapped_brightness}"
-    
-    # 데이터베이스(recommend_data.py)에서 룩을 가져오고, 없으면 기본값 반환
-    return MAKEUP_RECOMMENDATIONS.get(lookup_key, DEFAULT_RECOMMENDATION)
+    lookup_key = season
+    return MAKEUP_RECOMMENDATIONS.get(season, DEFAULT_RECOMMENDATION)

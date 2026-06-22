@@ -20,7 +20,7 @@ class AnalysisRequest(BaseModel):
 
 @router.post("/analyze", response_model=AnalysisResponse, status_code=status.HTTP_201_CREATED)
 async def upload_and_analyze(payload: AnalysisRequest):
-    # 1. Cloudflare R2에서 이미지 분석 및 OpenCV 처리
+    # Cloudflare R2에서 이미지 분석 및 OpenCV 처리
     try:
         skin = await analyze_skin_from_r2(payload.file_key)
     except Exception as e:
@@ -36,15 +36,15 @@ async def upload_and_analyze(payload: AnalysisRequest):
             detail=f"이미지 분석 실패: {error_msg}. 얼굴이 명확하게 나온 사진으로 다시 시도해 주세요."
         )
 
-    # 2. 퍼스널 컬러 알고리즘 분석
+    # 퍼스널 컬러 알고리즘 분석
     season = classify_season(skin)
     tone = classify_skin_tone(skin)
     brightness = classify_brightness(skin)
 
-    # 3. 맞춤 메이크업 추천룩 생성
-    makeup = recommend_makeup(tone, brightness)
+    # 맞춤 메이크업 추천룩 생성
+    makeup = recommend_makeup(season)
 
-    # 4. 분석 결과와 추천룩을 데이터베이스에 저장
+    # 분석 결과와 추천룩을 데이터베이스에 저장
     new_record = {
         "user_id": payload.user_id,
         "file_key": payload.file_key,
