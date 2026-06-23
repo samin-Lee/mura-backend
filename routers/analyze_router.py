@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from schemas import AnalysisResponse
 from services.history_service import load_all_data, save_all_data
-from services.image_service import analyze_skin_from_r2
+from services.image_service import AnalysisProxyError, analyze_skin_from_r2
 from services.recommended_data import recommend_makeup
 
 
@@ -27,17 +27,25 @@ async def upload_and_analyze(payload: AnalysisRequest):
         analysis_result = await analyze_skin_from_r2(payload.file_key)
     except ValueError as exc:
         error_msg = str(exc).rstrip(".")
-        if error_msg.startswith("이미지 분석 실패:"):
-            error_msg = error_msg.split(":", 1)[1].strip()
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"이미지 분석 실패: {error_msg}. 얼굴이 명확하게 나온 사진으로 다시 시도해 주세요.",
+            detail=f"image analysis failed: {error_msg}",
+        ) from exc
+    except AnalysisProxyError as exc:
+        print(
+            "[analysis upstream error] "
+            f"status={exc.status_code}, content_type={exc.content_type}, "
+            f"response_text={exc.response_text}"
+        )
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail=f"analysis server returned {exc.status_code}: {exc.response_text}",
         ) from exc
     except Exception as exc:
         print(f"[analysis server error] {type(exc).__name__}: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="이미지 분석 중 서버 오류가 발생했습니다.",
+            detail="image analysis server error",
         ) from exc
 
     response = {
@@ -58,7 +66,7 @@ async def upload_and_analyze(payload: AnalysisRequest):
         db_data.append(new_record)
         save_all_data(db_data)
     except Exception as exc:
-        print(f"[데이터베이스 저장 실패]: {exc}")
+        print(f"[database save failed] {exc}")
 
     return response
 
@@ -71,7 +79,7 @@ async def get_user_recommendations(user_id: str):
     if not user_records:
         raise HTTPException(
             status_code=404,
-            detail=f"User '{user_id}'에 대한 분석 기록을 찾을 수 없습니다.",
+            detail=f"no analysis history found for user '{user_id}'",
         )
 
     return {

@@ -13,6 +13,17 @@ HF_ANALYSIS_TOKEN = os.getenv("HF_ANALYSIS_TOKEN")
 ANALYSIS_TIMEOUT_SECONDS = 300.0
 
 
+class AnalysisProxyError(Exception):
+    def __init__(self, status_code: int, response_text: str, content_type: str | None = None):
+        self.status_code = status_code
+        self.response_text = response_text
+        self.content_type = content_type
+        message = f"analysis server returned {status_code}"
+        if response_text:
+            message = f"{message}: {response_text}"
+        super().__init__(message)
+
+
 async def analyze_skin_from_r2(file_key: str):
     print(
         f"[analysis proxy] start file_key={file_key}, "
@@ -49,12 +60,22 @@ async def analyze_skin_from_r2(file_key: str):
         f"[analysis proxy] response status={response.status_code}, "
         f"content_type={response.headers.get('content-type')}"
     )
+
     if response.status_code >= 400:
-        preview = response.text[:1000]
-        print(f"[analysis proxy] error body preview={preview}")
+        print(f"[analysis proxy] error body={response.text}")
 
     if response.status_code == 422:
-        detail = response.json().get("detail", "이미지 분석에 실패했습니다.")
+        try:
+            detail = response.json().get("detail", "image analysis failed")
+        except ValueError:
+            detail = response.text or "image analysis failed"
         raise ValueError(detail)
-    response.raise_for_status()
+
+    if response.status_code >= 400:
+        raise AnalysisProxyError(
+            status_code=response.status_code,
+            response_text=response.text,
+            content_type=response.headers.get("content-type"),
+        )
+
     return response.json()
