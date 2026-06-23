@@ -10,7 +10,7 @@ ANALYSIS_SERVER_URL = os.getenv(
     "ANALYSIS_SERVER_URL",
     "https://leesy23-mura-analysis.hf.space",
 ).rstrip("/")
-HF_ANALYSIS_TOKEN = os.getenv("HF_ANALYSIS_TOKEN")
+HF_ANALYSIS_TOKEN = (os.getenv("HF_ANALYSIS_TOKEN") or "").strip() or None
 ANALYSIS_TIMEOUT_SECONDS = 300.0
 
 
