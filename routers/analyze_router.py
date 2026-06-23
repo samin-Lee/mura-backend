@@ -70,7 +70,7 @@ async def upload_and_analyze(payload: AnalysisRequest):
         print(f"[analysis server error] {type(exc).__name__}: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"unexpected analysis error: {type(exc).__name__}: {exc}",
+            detail=f"DEPLOY_CHECK_MAIN_V3: {type(exc).__name__}: {exc}",
         ) from exc
 
     response = {
