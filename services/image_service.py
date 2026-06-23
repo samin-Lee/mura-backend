@@ -14,7 +14,14 @@ ANALYSIS_TIMEOUT_SECONDS = 300.0
 
 
 async def analyze_skin_from_r2(file_key: str):
+    print(
+        f"[analysis proxy] start file_key={file_key}, "
+        f"analysis_url={ANALYSIS_SERVER_URL}, token_present={bool(HF_ANALYSIS_TOKEN)}"
+    )
+
     image_bytes = await download_image_from_r2(file_key)
+    print(f"[analysis proxy] downloaded bytes={len(image_bytes)}")
+
     headers = {}
     if HF_ANALYSIS_TOKEN:
         headers["Authorization"] = f"Bearer {HF_ANALYSIS_TOKEN}"
@@ -28,11 +35,23 @@ async def analyze_skin_from_r2(file_key: str):
     }
 
     async with httpx.AsyncClient(timeout=ANALYSIS_TIMEOUT_SECONDS) as client:
-        response = await client.post(
-            f"{ANALYSIS_SERVER_URL}/analyze",
-            files=files,
-            headers=headers,
-        )
+        try:
+            response = await client.post(
+                f"{ANALYSIS_SERVER_URL}/analyze",
+                files=files,
+                headers=headers,
+            )
+        except httpx.HTTPError as exc:
+            print(f"[analysis proxy] request failed: {type(exc).__name__}: {exc}")
+            raise
+
+    print(
+        f"[analysis proxy] response status={response.status_code}, "
+        f"content_type={response.headers.get('content-type')}"
+    )
+    if response.status_code >= 400:
+        preview = response.text[:1000]
+        print(f"[analysis proxy] error body preview={preview}")
 
     if response.status_code == 422:
         detail = response.json().get("detail", "이미지 분석에 실패했습니다.")

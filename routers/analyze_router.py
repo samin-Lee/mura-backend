@@ -20,6 +20,10 @@ class AnalysisRequest(BaseModel):
 @router.post("/analyze", response_model=AnalysisResponse, status_code=status.HTTP_201_CREATED)
 async def upload_and_analyze(payload: AnalysisRequest):
     try:
+        print(
+            f"[analysis router] request received user_id={payload.user_id}, "
+            f"file_key={payload.file_key}"
+        )
         analysis_result = await analyze_skin_from_r2(payload.file_key)
     except ValueError as exc:
         error_msg = str(exc).rstrip(".")
