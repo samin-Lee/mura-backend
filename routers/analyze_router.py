@@ -5,7 +5,8 @@ from pydantic import BaseModel
 
 from schemas import AnalysisResponse
 from services.history_service import load_all_data, save_all_data
-from services.image_service import AnalysisProxyError, analyze_skin_from_r2
+from services.image_service import AnalysisProxyError, AnalysisRequestError, analyze_skin_from_r2
+from services.r2_image_service import R2ConfigError, R2DownloadError, R2ObjectNotFoundError
 from services.recommended_data import recommend_makeup
 
 
@@ -41,11 +42,35 @@ async def upload_and_analyze(payload: AnalysisRequest):
             status_code=exc.status_code,
             detail=f"analysis server returned {exc.status_code}: {exc.response_text}",
         ) from exc
+    except R2ObjectNotFoundError as exc:
+        print(f"[r2 object not found] {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except R2ConfigError as exc:
+        print(f"[r2 config error] {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(exc),
+        ) from exc
+    except R2DownloadError as exc:
+        print(f"[r2 download error] {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
+    except AnalysisRequestError as exc:
+        print(f"[analysis request error] {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
     except Exception as exc:
         print(f"[analysis server error] {type(exc).__name__}: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="image analysis server error",
+            detail=f"unexpected analysis error: {type(exc).__name__}: {exc}",
         ) from exc
 
     response = {

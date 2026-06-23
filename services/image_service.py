@@ -3,6 +3,7 @@ import os
 import httpx
 
 from services.r2_image_service import download_image_from_r2
+from services.r2_image_service import R2ConfigError, R2DownloadError, R2ObjectNotFoundError
 
 
 ANALYSIS_SERVER_URL = os.getenv(
@@ -22,6 +23,10 @@ class AnalysisProxyError(Exception):
         if response_text:
             message = f"{message}: {response_text}"
         super().__init__(message)
+
+
+class AnalysisRequestError(Exception):
+    pass
 
 
 async def analyze_skin_from_r2(file_key: str):
@@ -54,7 +59,7 @@ async def analyze_skin_from_r2(file_key: str):
             )
         except httpx.HTTPError as exc:
             print(f"[analysis proxy] request failed: {type(exc).__name__}: {exc}")
-            raise
+            raise AnalysisRequestError(f"failed to contact analysis server: {type(exc).__name__}: {exc}") from exc
 
     print(
         f"[analysis proxy] response status={response.status_code}, "
